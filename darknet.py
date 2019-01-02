@@ -41,6 +41,11 @@ def parse_cfg(cfgfile):
 
 # Creating the building blocks
 
+class EmptyLayer(nn.Module):
+    def __init__(self):
+        super(EmptyLayer, self).__init__()
+
+
 def create_modules(blocks):
   """
   Takes a list of blocks to construct pyTorch modules
@@ -103,3 +108,34 @@ def create_modules(blocks):
       stride = int(x["stride"])
       upsample = nn.Upsample(scale_factor = 2, mode = "bilinear")
       module.add_module("upsample_{}".format(index), upsample)
+
+    #If it is a route layer
+    elif (x["type"] == "route"):
+      x["layers"] = x["layers"].split(',')
+      #Start  of a route
+      start = int(x["layers"][0])
+      #end, if there exists one.
+      try:
+        end = int(x["layers"][1])
+      except:
+        end = 0
+    
+      #Positive anotation
+      if start > 0: 
+        start = start - index
+      if end > 0:
+        end = end - index
+    
+      route = EmptyLayer()
+      module.add_module("route_{0}".format(index), route)
+    
+      if end < 0:
+        #If we are concatenating maps
+        filters = output_filters[index + start] + output_filters[index + end]
+      else:
+        filters= output_filters[index + start]
+
+    #shortcut corresponds to skip connection
+    elif x["type"] == "shortcut":
+      shortcut = EmptyLayer()
+      module.add_module("shortcut_{}".format(index), shortcut)  
