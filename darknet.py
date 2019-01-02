@@ -167,7 +167,19 @@ def create_modules(blocks):
 
 # Defining the network
 class Darknet(nn.Module):
-    def __init__(self, cfgfile):
-        super(Darknet, self).__init__()
-        self.blocks = parse_cfg(cfgfile)
-        self.net_info, self.module_list = create_modules(self.blocks)
+  def __init__(self, cfgfile):
+    super(Darknet, self).__init__()
+    self.blocks = parse_cfg(cfgfile)
+    self.net_info, self.module_list = create_modules(self.blocks)
+
+  def forward(self, x, CUDA):
+    modules = self.blocks[1:]
+    outputs = {}
+    
+    write = 0     #This is explained a bit later
+    for i, module in enumerate(modules):        
+      module_type = (module["type"])   #We cache the outputs for the route layer
+
+      if module_type == "convolutional" or module_type == "upsample":
+        x = self.module_list[i](x)
+        
