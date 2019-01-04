@@ -189,6 +189,10 @@ class Darknet(nn.Module):
         outputs = {}   #We cache the outputs for the route layer
         
         write = 0
+    # Indicates whether we have encountered the first detection or not
+    # If 0, collector has not been initialized
+    # If 1, collector has been initialized and we can concatenate detection maps to it
+    
         for i, module in enumerate(modules):        
             module_type = (module["type"])
             
@@ -211,6 +215,7 @@ class Darknet(nn.Module):
     
                     map1 = outputs[i + layers[0]]
                     map2 = outputs[i + layers[1]]
+
                     x = torch.cat((map1, map2), 1)
                 
     
@@ -219,6 +224,7 @@ class Darknet(nn.Module):
                 x = outputs[i-1] + outputs[i+from_]
     
             elif module_type == 'yolo':        
+
                 anchors = self.module_list[i][0].anchors
                 #Get the input dimensions
                 inp_dim = int (self.net_info["height"])
@@ -229,6 +235,7 @@ class Darknet(nn.Module):
                 #Transform 
                 x = x.data
                 x = predict_transform(x, inp_dim, anchors, num_classes, CUDA)
+        
                 if not write:              #if no collector has been intialised. 
                     detections = x
                     write = 1
