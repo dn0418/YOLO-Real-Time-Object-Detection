@@ -1,5 +1,6 @@
 from __future__ import division
 
+from util import * 
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F 
@@ -176,7 +177,11 @@ class Darknet(nn.Module):
     modules = self.blocks[1:]
     outputs = {}
     
-    write = 0     #This is explained a bit later
+    write = 0
+    # Indicates whether we have encountered the first detection or not
+    # If 0, collector has not been initialized
+    # If 1, collector has been initialized and we can concatenate detection maps to it
+    
     for i, module in enumerate(modules):        
       module_type = (module["type"])   #We cache the outputs for the route layer
 
