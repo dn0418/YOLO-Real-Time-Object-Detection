@@ -195,13 +195,15 @@ for i in range(output.shape[0]):
     output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim_list[i,0])
     output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim_list[i,1])
 
-# load file with color palete to draw boxes in different colors
+
+output_recast = time.time()
 class_load = time.time()
+# load file with color palete to draw boxes in different colors
 colors = pkl.load(open("pallete", "rb"))
 
 draw = time.time()
 
-def write(x, results, color):
+def draw_rec(x, results):
     """
     Draws a rectangle with a random color from colors.
     Moreover, draws a filled rectangle on the top left corner
@@ -212,7 +214,8 @@ def write(x, results, color):
     img = results[int(x[0])]
     cls = int(x[-1])
     label = "{0}".format(classes[cls])
-
+    color = random.choice(colors)
+    
     # draw a rectangle
     cv2.rectangle(img, c1, c2,color, 1)
     
@@ -222,15 +225,33 @@ def write(x, results, color):
     # draw a filled rectangle
     cv2.rectangle(img, c1, c2,color, -1)
     # write the class of the object
-    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1);
+    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1)
+    
     return img
 
 # draw the boundring boxes on images
-list(map(lambda x: write(x, loaded_ims), output))
+list(map(lambda x: draw_rec(x, loaded_ims), output))
 
 # prefix image with det_ in front of the image name 
 det_names = pd.Series(imlist).apply(lambda x: "{}/det_{}".format(args.det,x.split("/")[-1]))
 
 # write the images with detections
 list(map(cv2.imwrite, det_names, loaded_ims))
+
 end = time.time()
+
+# print summary of code execution times
+print("SUMMARY")
+print("----------------------------------------------------------")
+print("{:25s}: {}".format("Task", "Time Taken (in seconds)"))
+print()
+print("{:25s}: {:2.3f}".format("Reading addresses", load_batch - read_dir))
+print("{:25s}: {:2.3f}".format("Loading batch", start_det_loop - load_batch))
+print("{:25s}: {:2.3f}".format("Detection (" + str(len(imlist)) +  " images)", output_recast - start_det_loop))
+print("{:25s}: {:2.3f}".format("Output Processing", class_load - output_recast))
+print("{:25s}: {:2.3f}".format("Drawing Boxes", end - draw))
+print("{:25s}: {:2.3f}".format("Average time_per_img", (end - load_batch)/len(imlist)))
+print("----------------------------------------------------------")
+
+
+torch.cuda.empty_cache()
