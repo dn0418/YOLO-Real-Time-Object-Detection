@@ -131,9 +131,10 @@ for i, batch in enumerate(im_batches):
     start = time.time()
     if CUDA:
         batch = batch.cuda()
-
+    with torch.no_grad():
+        prediction = model(Variable(batch), CUDA)
+        
     # generate prediciton and concatenate the prediction tensors
-    prediction = model(Variable(batch, volatile = True), CUDA)
     prediction = write_results(prediction, confidence, num_classes, nms_conf = nms_thesh)
 
     end = time.time()
