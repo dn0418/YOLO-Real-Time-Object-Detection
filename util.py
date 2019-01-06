@@ -58,3 +58,11 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
   prediction[:,:,:4] *= stride
 
   return prediction
+
+def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
+  """
+  """
+  # for each of the boundring boxes having objectness score below
+  # threshold, set attributes to 0
+  conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
+  prediction = prediction*conf_mask
