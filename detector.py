@@ -195,3 +195,42 @@ for i in range(output.shape[0]):
     output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim_list[i,0])
     output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim_list[i,1])
 
+# load file with color palete to draw boxes in different colors
+class_load = time.time()
+colors = pkl.load(open("pallete", "rb"))
+
+draw = time.time()
+
+def write(x, results, color):
+    """
+    Draws a rectangle with a random color from colors.
+    Moreover, draws a filled rectangle on the top left corner
+    of the boundring box, and writes the class of the object detected.
+    """
+    c1 = tuple(x[1:3].int())
+    c2 = tuple(x[3:5].int())
+    img = results[int(x[0])]
+    cls = int(x[-1])
+    label = "{0}".format(classes[cls])
+
+    # draw a rectangle
+    cv2.rectangle(img, c1, c2,color, 1)
+    
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
+    c2 = c1[0] + t_size[0] + 3, c1[1] + t_size[1] + 4
+
+    # draw a filled rectangle
+    cv2.rectangle(img, c1, c2,color, -1)
+    # write the class of the object
+    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1);
+    return img
+
+# draw the boundring boxes on images
+list(map(lambda x: write(x, loaded_ims), output))
+
+# prefix image with det_ in front of the image name 
+det_names = pd.Series(imlist).apply(lambda x: "{}/det_{}".format(args.det,x.split("/")[-1]))
+
+# write the images with detections
+list(map(cv2.imwrite, det_names, loaded_ims))
+end = time.time()
