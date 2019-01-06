@@ -59,6 +59,18 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
 
   return prediction
 
+def unique(tensor):
+  # get classes present in any given image
+   
+  tensor_np = tensor.cpu().numpy()
+  unique_np = np.unique(tensor_np)
+  unique_tensor = torch.from_numpy(unique_np)
+    
+  tensor_res = tensor.new(unique_tensor.shape)
+  tensor_res.copy_(unique_tensor)
+  
+  return tensor_res
+
 def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
   """
   """
@@ -66,3 +78,54 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
   # threshold, set attributes to 0
   conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
   prediction = prediction*conf_mask
+
+  # transform the center coordinates (center x, center y, height, width)
+  # to coordinates of a pair of diagonal corners (top-left corner x, 
+  # top-left corner y, right-bottom corner x, right-bottom corner y)
+  box_corner = prediction.new(prediction.shape)
+  box_corner[:,:,0] = (prediction[:,:,0] - prediction[:,:,2]/2)
+  box_corner[:,:,1] = (prediction[:,:,1] - prediction[:,:,3]/2)
+  box_corner[:,:,2] = (prediction[:,:,0] + prediction[:,:,2]/2) 
+  box_corner[:,:,3] = (prediction[:,:,1] + prediction[:,:,3]/2)
+  prediction[:,:,:4] = box_corner[:,:,:4]
+
+  # confidence thresholding and NMS has to be done for one image at once
+  # therefore, we loop over the first dimension of prediction
+  # which contains indexes of images in a batch
+  batch_size = prediction.size(0)
+  
+  # indicates that we haven't initialized output tensor
+  # which we will use to collect True detections across the batch
+  write = False
+
+  for ind in range(batch_size):
+    # image Tensor
+    image_pred = prediction[ind]
+    
+    #confidence threshholding 
+    #NMS
+    
+    # we have 80 class scores but we are only concerned
+    # with the class score having the maximum value 
+    # we remove 80 class scores from each row
+    # and replace it with the index of class having max values
+    # and with the class score for this class
+    max_conf, max_conf_score = torch.max(image_pred[:,5:5+ num_classes], 1)
+    max_conf = max_conf.float().unsqueeze(1)
+    max_conf_score = max_conf_score.float().unsqueeze(1)
+    seq = (image_pred[:,:5], max_conf, max_conf_score)
+    image_pred = torch.cat(seq, 1)
+
+    # remove boundring box rows equal to 0
+    # if no detections, skip the rest of the loop body for this image
+    non_zero_ind = (torch.nonzero(image_pred[:,4]))
+    try:
+      image_pred_ = image_pred[non_zero_ind.squeeze(),:].view(-1,7)
+    except:
+      continue
+  
+    if image_pred_.shape[0] == 0:
+      continue
+
+    # Get the various classes detected in the image
+    img_classes = unique(image_pred_[:,-1]) # -1 index holds the class index
