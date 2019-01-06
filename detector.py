@@ -14,6 +14,7 @@ import pickle as pkl
 import pandas as pd
 import random
 
+# command line arguments
 def arg_parse():
     """
     Parse arguements to the detect module
@@ -42,7 +43,7 @@ def arg_parse():
                         default = "416", type = str)
     
     return parser.parse_args()
-    
+
 args = arg_parse()
 images = args.images
 batch_size = int(args.bs)
@@ -51,7 +52,25 @@ nms_thesh = float(args.nms_thresh)
 start = 0
 CUDA = torch.cuda.is_available()
 
+# load class file 
 num_classes = 80    
 #For COCO
-
 classes = load_classes("data/coco.names")
+
+#Set up the neural network
+print("Loading network.....")
+model = Darknet(args.cfgfile)
+model.load_weights(args.weightsfile)
+print("Network successfully loaded")
+
+model.net_info["height"] = args.reso
+inp_dim = int(model.net_info["height"])
+assert inp_dim % 32 == 0 
+assert inp_dim > 32
+
+#If there's a GPU availible, put the model on GPU
+if CUDA:
+    model.cuda()
+
+#Set the model in evaluation mode
+model.eval()

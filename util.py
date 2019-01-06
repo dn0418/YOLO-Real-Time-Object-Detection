@@ -7,6 +7,17 @@ from torch.autograd import Variable
 import numpy as np
 import cv2
 
+def load_classes(namesfile):
+  """
+  Takes a class file
+  Returns a dictionary
+  
+  Dictionary maps the index of every class to a string of it's name
+  """
+  fp = open(namesfile, "r")
+  names = fp.read().split("\n")[:-1]
+  return names
+
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
   """
   Takes an detection feature map and turns it into a 2-D tensor
