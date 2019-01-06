@@ -72,5 +72,30 @@ assert inp_dim > 32
 if CUDA:
     model.cuda()
 
-#Set the model in evaluation mode
+# Set the model in evaluation mode
 model.eval()
+
+# Read the input images
+
+# checkpoint to measure time 
+read_dir = time.time()
+
+# Detection phase
+try:
+    imlist = [osp.join(osp.realpath('.'), images, img) for img in os.listdir(images)]
+    # path to the images
+except NotADirectoryError:
+    imlist = []
+    imlist.append(osp.join(osp.realpath('.'), images))
+except FileNotFoundError:
+    print ("No file or directory with the name {}".format(images))
+    exit()
+
+# If the directory to save the detections doesn't exist, create it.
+if not os.path.exists(args.det):
+    os.makedirs(args.det)
+
+# checkpoint to measure time 
+load_batch = time.time()
+# use open cv to load images
+loaded_ims = [cv2.imread(x) for x in imlist]
