@@ -167,3 +167,31 @@ for i, batch in enumerate(im_batches):
     if CUDA:
         # makes sure that CUDA kernel is synchronized with the CPU
         torch.cuda.synchronize()
+
+# drawning boundries boxes on images
+
+# check if detection has been made, if not, exit program
+try:
+    output
+except NameError:
+    print ("No detections were made")
+    exit()
+
+# predictions conform to the input size of the network, not the orginal images
+# therefor we have to transform the corner attributes of each boundring box
+# to the original dimensions of image
+im_dim_list = torch.index_select(im_dim_list, 0, output[:,0].long())
+scaling_factor = torch.min(inp_dim/im_dim_list,1)[0].view(-1,1)
+
+output[:,[1,3]] -= (inp_dim - scaling_factor*im_dim_list[:,0].view(-1,1))/2
+output[:,[2,4]] -= (inp_dim - scaling_factor*im_dim_list[:,1].view(-1,1))/2
+
+# undo the rescaling performed in letterbox_image function
+output[:,1:5] /= scaling_factor
+
+# clip any boundring boxes that have boundries outside the image
+#  to the edges of the image
+for i in range(output.shape[0]):
+    output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim_list[i,0])
+    output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim_list[i,1])
+
