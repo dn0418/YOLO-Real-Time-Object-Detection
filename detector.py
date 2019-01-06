@@ -109,3 +109,61 @@ im_dim_list = torch.FloatTensor(im_dim_list).repeat(1,2)
 
 if CUDA:
     im_dim_list = im_dim_list.cuda()
+
+# Create the batches 
+leftover = 0
+if (len(im_dim_list) % batch_size):
+   leftover = 1
+
+if batch_size != 1:
+   num_batches = len(imlist) // batch_size + leftover            
+   im_batches = [torch.cat((im_batches[i*batch_size : min((i +  1)*batch_size,
+                       len(im_batches))]))  for i in range(num_batches)]
+
+# the detection loop 
+
+write = 0
+start_det_loop = time.time()
+
+# iterate over the batches
+for i, batch in enumerate(im_batches):
+    #load the image 
+    start = time.time()
+    if CUDA:
+        batch = batch.cuda()
+
+    # generate prediciton and concatenate the prediction tensors
+    prediction = model(Variable(batch, volatile = True), CUDA)
+    prediction = write_results(prediction, confidence, num_classes, nms_conf = nms_thesh)
+
+    end = time.time()
+
+    if type(prediction) == int:
+
+        for im_num, image in enumerate(imlist[i*batch_size: min((i +  1)*batch_size, len(imlist))]):
+            im_id = i*batch_size + im_num
+            print("{0:20s} predicted in {1:6.3f} seconds".format(image.split("/")[-1], (end - start)/batch_size))
+            print("{0:20s} {1:s}".format("Objects Detected:", ""))
+            print("----------------------------------------------------------")
+        continue
+
+    # transform the atribute from index in batch to index in imlist 
+    prediction[:,0] += i*batch_size
+
+    # If we have't initialised output
+    if not write:
+        output = prediction  
+        write = 1
+    else:
+        output = torch.cat((output,prediction))
+
+    for im_num, image in enumerate(imlist[i*batch_size: min((i +  1)*batch_size, len(imlist))]):
+        im_id = i*batch_size + im_num
+        objs = [classes[int(x[-1])] for x in output if int(x[0]) == im_id]
+        print("{0:20s} predicted in {1:6.3f} seconds".format(image.split("/")[-1], (end - start)/batch_size))
+        print("{0:20s} {1:s}".format("Objects Detected:", " ".join(objs)))
+        print("----------------------------------------------------------")
+
+    if CUDA:
+        # makes sure that CUDA kernel is synchronized with the CPU
+        torch.cuda.synchronize()
