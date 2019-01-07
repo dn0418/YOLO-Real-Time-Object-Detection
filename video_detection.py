@@ -14,6 +14,8 @@ import pickle as pkl
 import pandas as pd
 import random
 
+# TO-DO Merge terminal commands for video and images into one console app
+# command line arguments
 def arg_parse():
     """
     Parse arguements to the detect module

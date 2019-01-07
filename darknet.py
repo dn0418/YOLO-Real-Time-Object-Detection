@@ -7,19 +7,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 
-# Testing the forward pass
-
-def get_test_input():
-    img = cv2.imread("dog-cycle-car.png")
-    img = cv2.resize(img, (416,416))          #Resize to the input dimension
-    img_ =  img[:,:,::-1].transpose((2,0,1))  # BGR -> RGB | H X W C -> C X H X W 
-    img_ = img_[np.newaxis,:,:,:]/255.0       #Add a channel at 0 (for batch) | Normalise
-    img_ = torch.from_numpy(img_).float()     #Convert to float
-    img_ = Variable(img_)                     # Convert to Variable
-    return img_
-
-# Parsing the configuration file
-
 def parse_cfg(cfgfile):
   """
   Takes a configuration file
@@ -30,19 +17,31 @@ def parse_cfg(cfgfile):
   """
 
   file = open(cfgfile, 'r')
-  lines = file.read().split('\n')                        # store the lines in a list
-  lines = [x for x in lines if len(x) > 0]               # get read of the empty lines 
-  lines = [x for x in lines if x[0] != '#']              # get rid of comments
-  lines = [x.rstrip().lstrip() for x in lines]           # get rid of fringe whitespaces
+  
+  # store the lines in a list
+  lines = file.read().split('\n')
+  
+  # get read of the empty lines 
+  lines = [x for x in lines if len(x) > 0]
+  
+  # get rid of comments
+  lines = [x for x in lines if x[0] != '#']
+  
+  # get rid of fringe whitespaces
+  lines = [x.rstrip().lstrip() for x in lines]
 
   block = {}
   blocks = []
 
   for line in lines:
-    if line[0] == "[":               # This marks the start of a new block
-      if len(block) != 0:          # If block is not empty, implies it is storing values of previous block.
-        blocks.append(block)     # add it the blocks list
-        block = {}               # re-init the block
+    # This marks the start of a new block
+    if line[0] == "[":
+      # If block is not empty, implies it is storing values of previous block.
+      if len(block) != 0:
+        # add it the blocks list
+        blocks.append(block)
+        # re-init the block
+        block = {}
       block["type"] = line[1:-1].rstrip()     
     else:
       key,value = line.split("=") 
@@ -71,7 +70,9 @@ def create_modules(blocks):
   Block is represented as a dictionary in the list. 
   """
 
-  net_info = blocks[0]     #Captures the information about the input and pre-processing    
+  # Captures the information about the input and pre-processing    
+  net_info = blocks[0]
+  
   module_list = nn.ModuleList()
   prev_filters = 3
   output_filters = []
@@ -84,7 +85,7 @@ def create_modules(blocks):
     #append to module_list
     
     if (x["type"] == "convolutional"):
-    #Get the info about the layer
+    # Get the info about the layer
       activation = x["activation"]
       try:
         batch_normalize = int(x["batch_normalize"])
@@ -118,25 +119,25 @@ def create_modules(blocks):
         activn = nn.LeakyReLU(0.1, inplace = True)
         module.add_module("leaky_{0}".format(index), activn)
 
-    #If it's an upsampling layer
-    #We use Bilinear2dUpsampling
+    # If it's an upsampling layer
+    # We use Bilinear2dUpsampling
     elif (x["type"] == "upsample"):
       stride = int(x["stride"])
       upsample = nn.Upsample(scale_factor = 2, mode = "bilinear")
       module.add_module("upsample_{}".format(index), upsample)
 
-    #If it is a route layer
+    # If it is a route layer
     elif (x["type"] == "route"):
       x["layers"] = x["layers"].split(',')
-      #Start  of a route
+      # Start  of a route
       start = int(x["layers"][0])
-      #end, if there exists one.
+      # end, if there exists one.
       try:
         end = int(x["layers"][1])
       except:
         end = 0
     
-      #Positive anotation
+      # Positive anotation
       if start > 0: 
         start = start - index
       if end > 0:
@@ -146,17 +147,17 @@ def create_modules(blocks):
       module.add_module("route_{0}".format(index), route)
     
       if end < 0:
-        #If we are concatenating maps
+        # If we are concatenating maps
         filters = output_filters[index + start] + output_filters[index + end]
       else:
         filters= output_filters[index + start]
 
-    #shortcut corresponds to skip connection
+    # shortcut corresponds to skip connection
     elif x["type"] == "shortcut":
       shortcut = EmptyLayer()
       module.add_module("shortcut_{}".format(index), shortcut)
 
-    #Yolo is the detection layer
+    # Yolo is the detection layer
     elif x["type"] == "yolo":
       mask = x["mask"].split(",")
       mask = [int(x) for x in mask]
@@ -271,8 +272,8 @@ class Darknet(nn.Module):
       for i in range(len(self.module_list)):
         module_type = self.blocks[i + 1]["type"]
 
-        #If module_type is convolutional load weights
-        #Otherwise ignore.
+        # If module_type is convolutional load weights
+        # Otherwise ignore.
         if module_type == "convolutional":
           model = self.module_list[i]
           try:
@@ -286,10 +287,10 @@ class Darknet(nn.Module):
           if (batch_normalize):
             bn = model[1]
 
-            #Get the number of weights of Batch Norm Layer
+            # Get the number of weights of Batch Norm Layer
             num_bn_biases = bn.bias.numel()
 
-            #Load the weights
+            # Load the weights
             bn_biases = torch.from_numpy(weights[ptr:ptr + num_bn_biases])
             ptr += num_bn_biases
 
@@ -302,13 +303,13 @@ class Darknet(nn.Module):
             bn_running_var = torch.from_numpy(weights[ptr: ptr + num_bn_biases])
             ptr  += num_bn_biases
 
-            #Cast the loaded weights into dims of model weights. 
+            # Cast the loaded weights into dims of model weights. 
             bn_biases = bn_biases.view_as(bn.bias.data)
             bn_weights = bn_weights.view_as(bn.weight.data)
             bn_running_mean = bn_running_mean.view_as(bn.running_mean)
             bn_running_var = bn_running_var.view_as(bn.running_var)
 
-            #Copy the data to model
+            # Copy the data to model
             bn.bias.data.copy_(bn_biases)
             bn.weight.data.copy_(bn_weights)
             bn.running_mean.copy_(bn_running_mean)
@@ -316,23 +317,23 @@ class Darknet(nn.Module):
           
           # if batch normalize is not True, load layer biases
           else:
-            #Number of biases
+            # Number of biases
             num_biases = conv.bias.numel()
 
-            #Load the weights
+            # Load the weights
             conv_biases = torch.from_numpy(weights[ptr: ptr + num_biases])
             ptr = ptr + num_biases
 
-            #reshape the loaded weights according to the dims of the model weights
+            # reshape the loaded weights according to the dims of the model weights
             conv_biases = conv_biases.view_as(conv.bias.data)
 
-            #Finally copy the data
+            # Finally copy the data
             conv.bias.data.copy_(conv_biases)
 
-          #Let us load the weights for the Convolutional layers
+          # Let us load the weights for the Convolutional layers
           num_weights = conv.weight.numel()
 
-          #Do the same as above for weights
+          # Do the same as above for weights
           conv_weights = torch.from_numpy(weights[ptr:ptr+num_weights])
           ptr = ptr + num_weights
 
