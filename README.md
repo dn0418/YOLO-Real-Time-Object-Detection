@@ -15,7 +15,7 @@ In this notebook, I’ll perform a full implementation of YOLOv3 in PyTorch base
 * [YOLOv3: An Incremental Improvement, Joseph Redmon, Ali Farhadi](https://pjreddie.com/media/files/papers/YOLOv3.pdf)
 * [How to implement a YOLO (v3) object detector from scratch in PyTorch, Ayoosh Kathuria](https://blog.paperspace.com/how-to-implement-a-yolo-object-detector-in-pytorch/).
 
-<img src='imgs/det_kids_cooking.jpg' width=80% />
+<img src='det/det_kids_cooking.jpg' width=80% />
 
 ## Installation
 
