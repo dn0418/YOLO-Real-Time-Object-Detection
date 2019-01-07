@@ -14,6 +14,7 @@ import pickle as pkl
 import pandas as pd
 import random
 
+# TO-DO add flag to switch between the video file and web cam
 def arg_parse():
     """
     Parse arguements to the detect module
@@ -33,7 +34,7 @@ def arg_parse():
     parser.add_argument("--reso", dest = 'reso', help = 
                         "Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default = "416", type = str)
-    parser.add_argument("--video", dest = "videofile", help = "Video file to     run detection on", default = "video.avi", type = str)
+    parser.add_argument("--video", dest = "videofile", help = "Video file to run detection on", default = "video.avi", type = str)
     
     return parser.parse_args()
     
@@ -97,13 +98,14 @@ def draw_rec(x, results):
 #Detection phase
 
 # It is possible to use recorded video or webcam
+# TO-DO switch between video file and webcam using terminal flag
 
 # Path to the video file 
 # videofile = args.videofile 
 # cap = cv2.VideoCapture(videofile)
 
 # Webcam
-cap = cv2.VideoCapture(0)  
+cap = cv2.VideoCapture(0)
 
 assert cap.isOpened(), 'Cannot capture source'
 
@@ -163,3 +165,5 @@ while cap.isOpened():
         print("FPS of the video is {:5.2f}".format( frames / (time.time() - start)))
     else:
         break
+
+# TO-DO add option to save video with detections from the webcam
