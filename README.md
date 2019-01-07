@@ -36,7 +36,7 @@ wget https://pjreddie.com/media/files/yolov3.weights
 
 ## Running the script
 
-To run detection for images:
+### Run detection for images
 
 ```
 python image_detection.py -h
@@ -54,6 +54,30 @@ python image_detection.py --images imgs --det det
 python image_detection.py --images imgs --det det --reso 320
 ```
 `--reso` flag allows you to change resolution of the input images, default value is 416. Number must be a multiple of 32 and greater than 32.
+
+### Run detection for video
+
+```
+python video_detection.py -h
+```
+`-h` flag allows you to look up all terminal flags defined.
+
+```
+python video_detection.py --video video/example.avi
+```
+`--video` flag defines the directory and name of your input video. Video must be in the the .avi format.
+
+```
+python video_detection.py
+```
+Run video detection script without a `--video` flag to use machine's default camera.
+
+```
+python video_detection.py --reso 320
+```
+`--reso` flag allows you to change resolution of the video, default value is 160.
+
+To stop web cam recording, press `Q` on the keyboard.
 
 ## Contributing
 
