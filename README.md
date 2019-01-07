@@ -33,6 +33,7 @@ Download YOLOv3 weights:
 ```
 wget https://pjreddie.com/media/files/yolov3.weights
 ```
+You can download different weights from the [YOLO website](https://pjreddie.com/darknet/yolo/).
 
 ## Running the script
 
@@ -55,6 +56,11 @@ python image_detection.py --images imgs --det det --reso 320
 ```
 `--reso` flag allows you to change resolution of the input images, default value is 416. Number must be a multiple of 32 and greater than 32.
 
+```
+python image_detection.py --confidence 0.25
+```
+`--confidence` flag allows you to change confidence level. By default, model displays object detected with a confidence of 0.5 or higher.
+
 ### Run detection for video
 
 ```
@@ -76,6 +82,11 @@ Run video detection script without a `--video` flag to use machine's default cam
 python video_detection.py --reso 320
 ```
 `--reso` flag allows you to change resolution of the video, default value is 160.
+
+```
+python video_detection.py --confidence 0.25
+```
+`--confidence` flag allows you to change confidence level. By default, model displays object detected with a confidence of 0.5 or higher.
 
 To stop web cam recording, press `Q` on the keyboard.
 
