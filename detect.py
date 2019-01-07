@@ -115,13 +115,12 @@ leftover = 0
 if (len(im_dim_list) % batch_size):
    leftover = 1
 
-if batch_size != 1:
-   num_batches = len(imlist) // batch_size + leftover            
-   im_batches = [torch.cat((im_batches[i*batch_size : min((i +  1)*batch_size,
-                       len(im_batches))]))  for i in range(num_batches)]
+if batch_size != 1:           
+    num_batches = len(imlist) // batch_size + leftover            
+    im_batches = [torch.cat((im_batches[i*batch_size : min((i +  1)*batch_size,
+                        len(im_batches))]))  for i in range(num_batches)]  
 
 # the detection loop 
-
 write = 0
 start_det_loop = time.time()
 
@@ -133,7 +132,7 @@ for i, batch in enumerate(im_batches):
         batch = batch.cuda()
     with torch.no_grad():
         prediction = model(Variable(batch), CUDA)
-        
+
     # generate prediciton and concatenate the prediction tensors
     prediction = write_results(prediction, confidence, num_classes, nms_conf = nms_thesh)
 
@@ -234,7 +233,7 @@ def draw_rec(x, results):
 list(map(lambda x: draw_rec(x, loaded_ims), output))
 
 # prefix image with det_ in front of the image name 
-det_names = pd.Series(imlist).apply(lambda x: "{}/det_{}".format(args.det,x.split("/")[-1]))
+det_names = pd.Series(imlist).apply(lambda x: "{}/det_{}".format(args.det,x.split(os.sep)[-1]))
 
 # write the images with detections
 list(map(cv2.imwrite, det_names, loaded_ims))
