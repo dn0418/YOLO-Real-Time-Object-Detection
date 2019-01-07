@@ -1,5 +1,7 @@
 # Real-time object detection - YOLOv3 in PyTorch
 
+This project is still under development.
+
 ## Table of Contents
 
 * [Description](#description)
@@ -14,6 +16,8 @@ In this notebook, I’ll perform a full implementation of YOLOv3 in PyTorch base
 * [Orginial implementation of darknet](https://github.com/pjreddie/darknet)
 * [YOLOv3: An Incremental Improvement, Joseph Redmon, Ali Farhadi](https://pjreddie.com/media/files/papers/YOLOv3.pdf)
 * [How to implement a YOLO (v3) object detector from scratch in PyTorch, Ayoosh Kathuria](https://blog.paperspace.com/how-to-implement-a-yolo-object-detector-in-pytorch/).
+
+Example of image detection output:
 
 <img src='det/det_kids_cooking.jpg' width=80% />
 
