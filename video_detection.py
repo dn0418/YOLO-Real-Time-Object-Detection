@@ -14,7 +14,6 @@ import pickle as pkl
 import pandas as pd
 import random
 
-# TO-DO add flag to switch between the video file and web cam
 def arg_parse():
     """
     Parse arguements to the detect module
@@ -34,8 +33,8 @@ def arg_parse():
     parser.add_argument("--reso", dest = 'reso', help = 
                         "Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default = "416", type = str)
-    parser.add_argument("--video", dest = "videofile", help = "Video file to run detection on", default = "video.avi", type = str)
-    
+    parser.add_argument("--video", dest = "videofile", help = "Video file to run detection on. Skip to use the default camera", default = 0, type = str)
+
     return parser.parse_args()
     
 args = arg_parse()
@@ -97,27 +96,28 @@ def draw_rec(x, results):
 
 #Detection phase
 
-# It is possible to use recorded video or webcam
-# TO-DO switch between video file and webcam using terminal flag
-
-# Path to the video file 
-# videofile = args.videofile 
-# cap = cv2.VideoCapture(videofile)
-
-# Webcam
-cap = cv2.VideoCapture(0)
-
+# Path to the video file or default camera
+videofile = args.videofile 
+# Open the video file or the default camera
+cap = cv2.VideoCapture(videofile)
+# Check if we succeeded
 assert cap.isOpened(), 'Cannot capture source'
 
 frames = 0  
 start = time.time()
 
+# While video file or cam is open
 while cap.isOpened():
+
+    # read video file or capturing data
+    # return boolean indicating whether 
+    # the read was successful (ret)
+    # and the image (frame)
     ret, frame = cap.read()
-    
+
     if ret:   
         img = prep_image(frame, inp_dim)
-        # cv2.imshow("a", frame)
+
         im_dim = frame.shape[1], frame.shape[0]
         im_dim = torch.FloatTensor(im_dim).repeat(1,2)   
                      
