@@ -7,6 +7,7 @@ This project is still under development.
 * [Description](#description)
 * [Installation](#installation)
 * [Running the script](#running-the-script)
+* [Demo](#demo)
 * [Contributing](#contributing)
 
 ## Description
@@ -93,6 +94,10 @@ python video_detection.py --confidence 0.25
 `--confidence` flag allows you to change confidence level. By default, model displays object detected with a confidence of 0.5 or higher.
 
 To stop web cam recording, press `Q` on the keyboard.
+
+##Demo
+
+<video src="demo.mp4" width="320" height="200" controls preload></video>
 
 ## Contributing
 
