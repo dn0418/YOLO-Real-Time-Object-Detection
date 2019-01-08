@@ -95,9 +95,9 @@ python video_detection.py --confidence 0.25
 
 To stop web cam recording, press `Q` on the keyboard.
 
-##Demo
+## Demo
 
-<video src="demo.mp4" width="320" height="200" controls preload></video>
+<img src='demo.gif' width=80% />
 
 ## Contributing
 
